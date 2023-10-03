@@ -1,16 +1,17 @@
 (ns contextual-search.core
   (:require [contextual-search.match-query :as match]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [contextual-search.hard-coded-data :as data])
   (:import (java.io FileNotFoundException)))
 
 
-(defn seq-of-all-words
+(defn break-string-on-words
   [text]
   (->> (str/split text #"\s+")
        (remove str/blank?)))
 
 
-(defn clean-string-of-text
+(defn seq-of-all-words
   "Gets plain text and cleaning text from non-alphanumeric characters,
   except spaces and hyphen, if it's appears inside a word.
   Return clean text in one string.
@@ -19,14 +20,14 @@
   (-> text
       (str/replace #"[^A-Za-z0-9 -]| -|- | - " " ")
       str/lower-case
-      str/trim))
+      str/trim
+      break-string-on-words))
 
 
 (defn run-text
   [{:keys [text] :as _opts}]
-  (let [clean-string (clean-string-of-text text)
-        words (seq-of-all-words clean-string)
-        query {}]
+  (let [words (seq-of-all-words text)
+        query data/query]
     (cond
       (empty? words) {:error "There are no words in given text."}
       (empty? (get query :words-to-find)) {:error "Given query is empty."}
