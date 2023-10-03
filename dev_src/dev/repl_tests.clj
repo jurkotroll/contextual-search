@@ -2,13 +2,11 @@
   (:require [clojure.string :as str]
             [clojure.math.combinatorics :as combo]
             [contextual-search.core :as core]
-            [contextual-search.validate :as v]
+            [contextual-search.validate :as validate]
             [clojure.java.io :as io]
-            [clojure.edn :as edn]
-            [contextual-search.helpers :as helper]
-            [contextual-search.schema :as s]
             [malli.core :as malli]
-            [malli.error :as error]))
+            [malli.error :as error]
+            [contextual-search.match-query :as match]))
 
 
 
@@ -19,35 +17,10 @@
 
   (get query :words-to-find)
 
-  (let [word-positions (core/find-word-positions {:words ["a" "b" "b" "c"] :words-to-find (get query :words-to-find)})
-        combinations (core/word-position-combinations word-positions)
-        one-comb (first combinations)
-        conditions (get query :conditions)
-        clause {:word-1 "d" :word-2 "c" :max-distance 1}
-        par-val (core/pair-validation clause [["c" 3] ["b" 5]])
-
-        v-comb (map #(core/validate-combination conditions %) combinations)]
-
-    v-comb)
-
-
-  (- 3 nil)
-
-
-
-  (core/find-word-positions {:words ["a" "b" "b" "c"] :words-to-find (get query :words-to-find)})
-
-  (core/match-single-word-query? ["a" "b" "b" "c"] {:words-to-find ["d"]})
-
-  (core/match-mani-words-query? ["a" "b" "b" "c"] query)
-
 
   (core/run-text {:text ""})
 
   (some? [])
-
-
-
 
   (let [clean-string ""]
     (if (malli/validate s/non-empty-string clean-string)
@@ -63,44 +36,11 @@
 
 
 
-  (core/run {:file "s/resources/contextual-search/test-text-empty.txt"})
-
-  (let [text (core/get-text-from-file "resources/contextual-search/test-text.txt")
-        string-of-words (core/clean-string-of-text text)
-        #_#_queries (helper/load-edn "queries.edn")
-        #_#_query (get queries :query-1)
-        words-to-find ["solar" "o"]
-        word-positions (core/find-word-positions words-to-find string-of-words)
-        combinations (core/word-position-combinations words-to-find word-positions)
-        conditions [[{:word-1 "solar" :word-2 "panel" :max-distance 1}]]
-        v-comb (core/validated-combinations conditions combinations)]
-
-    (tap> v-comb)
-    (tap> [:cond conditions])
-    (tap> [:comb combinations])
-
-
-    #_(tap> queries)
-    #_(tap> query))
-
-  (.exists (clojure.java.io/file "../../resources/contextual-search/queries.edn"))
-
-
   (let [text (slurp "resources/contextual-search/test-text.txt")]
     (tap> text)
     (->> (str/split text #"\s+")
          (map str/lower-case)
          (map #(re-find #"[\w\-]+" %))))
-
-
-
-
-
-  (core/find-word-positions ["test" "solar"] (core/vector-of-words "test"))
-
-  (io/resource "contextual-search/test-text.txt")
-
-  (core/run {:file "test-text.txt"})
 
   (core/match-query?
     (slurp (io/resource "contextual-search/test-text.txt"))
@@ -147,7 +87,7 @@
 
 
 
-  (v/all-valid? [[] [true false]])
+  (validate/all-valid? [[] [true false]])
 
   (def conditions [[{:word-1 "material" :word-2 "silicon" :max-distance 3}]
                    [{:word-1 "car" :word-2 "material" :max-distance 9}
@@ -167,8 +107,8 @@
 
   (def condition ["material" "silicon" 3])
   (def comb '(["car" 30] ["material" 39] ["silicon" 37]))
-  (v/pair-of-word-positions condition comb)
-  (tap> (v/single-combination conditions comb))
+  (validate/pair-of-word-positions condition comb)
+  (tap> (validate/single-combination conditions comb))
 
   (some? (first [1]))
 
@@ -244,11 +184,49 @@
   ;1 -> string and 2 -> vec ==> condition []
 
 
+  (def test-text
+    "  The invention discloses a    - fiber solar panel some-word car roof. Carbon fiber is taken as a raw material")
 
 
 
+  (tap> (core/seq-of-all-words test-text))
+
+  (def string-to-break "invention discloses a carbon fiber solar panel car roof")
+
+  (core/break-string-on-words string-to-break)
+
+  (core/break-string-on-words "")
 
 
+  (def words-test-1 '("invention" "discloses" "a" "carbon" "fiber" "solar" "panel" "car" "roof"))
+
+  (def query-1 {:words-to-find ["solar"]
+                :conditions    []})
+
+  (def query-2 {:words-to-find ["panel" "solar"]
+                :conditions    [[{:word-1 "panel" :word-2 "solar" :max-distance 1}]]})
+
+  (def query-3 {:words-to-find ["panel" "solar" "roof"]
+                :conditions    [[{:word-1 "panel" :word-2 "solar" :max-distance 1}]
+                                [{:word-1 "panel" :word-2 "roof" :max-distance 2}
+                                 {:word-1 "panel" :word-2 "roof" :max-distance 2}]]})
+
+  (match/single-word-query? query-1 [])
+
+
+  (def test-text-all
+    "The invention discloses a carbon fiber solar panel car roof. Carbon fiber is taken as a raw material to be
+    subjected to die machining; one or more required carbon fiber car roof models are formed; then a silicon raw
+    material is subjected to chemical vapor deposition or deposited or sprayed on to a prepared carbon fiber model
+    base in a physical spraying mode in a reaction chamber, so as to form a crystalline silicon film; finally the
+    carbon fiber model base with the crystalline silicon film is put into a crystal oven, so as to be subjected to
+    high-temperature melting crystallization; and a series of battery piece manufacture processes are performed,
+    so that a required solar panel is obtained, and the finished product of the carbon fiber solar panel car roof
+    is obtained")
+
+  (core/seq-of-all-words nil)
+
+  (core/run-text {:text test-text-all})
 
 
   {})
