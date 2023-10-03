@@ -23,5 +23,5 @@
   [{:keys [words-to-find] :as query} words]
   (let [one-word-query? (= 1 (count words-to-find))]
     (if one-word-query?
-      (single-word-query? words query)
-      (mani-words-query? words query))))
+      (single-word-query? query words)
+      (mani-words-query? query words))))
