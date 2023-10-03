@@ -13,3 +13,7 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 .idea
+/.clj-kondo/
+/.rebel_readline_history
+/contextual-search.iml
+/.portal/
