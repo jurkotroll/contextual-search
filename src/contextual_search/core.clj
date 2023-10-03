@@ -25,18 +25,19 @@
 
 
 (defn run-text
-  [{:keys [text] :as _opts}]
-  (let [words (seq-of-all-words text)
-        query data/query]
+  [{:keys [query text] :as _opts}]
+  (let [words (seq-of-all-words text)]
     (cond
       (empty? words) {:error "There are no words in given text."}
-      (empty? (get query :words-to-find)) {:error "Given query is empty."}
-      :else {:result (match/match-query? words query)})))
+      (empty? (:words-to-find query)) {:error "Given query is empty."}
+      :else {:result (match/match-query? query words)})))
 
 
 (defn run-file
   [{:keys [file] :as _opts}]
-  (run-text {:text (slurp file)}))
+  (let [query data/query]
+    (println
+      (run-text {:text (slurp file) :query query}))))
 
 
 (defn -main
