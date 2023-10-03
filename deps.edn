@@ -1,0 +1,8 @@
+{:paths   ["src" "resources"]
+ :deps    {org.clojure/clojure            {:mvn/version "1.11.1"}
+           org.clojure/math.combinatorics {:mvn/version "0.2.0"}
+           metosin/malli {:mvn/version "0.13.0"}}
+ :aliases {:dev/deps
+           {:extra-paths ["dev_src"]
+            :extra-deps  {djblue/portal {:mvn/version "0.35.1"}}}}}
+
