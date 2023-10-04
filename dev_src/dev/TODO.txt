@@ -1,3 +1,1 @@
-TODO: Word positions tests.
-TODO: Add description to all functions
 TODO: Parsing string with query.

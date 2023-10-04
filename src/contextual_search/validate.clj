@@ -15,6 +15,8 @@
 
 
 (defn pair-validation
+  "Compares a pair of word-position.
+   Returns true, if them are not further than max-distance."
   [{:keys [max-distance]} [[_ position-1] [_ position-2]]]
   (let [distance (abs (- position-1 position-2))]
     (<= 1 distance max-distance)))
@@ -29,6 +31,7 @@
 
 
 (defn single-combination
+  "Validate all conditions from query on one combination of word-positions."
   [conditions combination]
   (if (> 2 (count combination))
     [[false]]
@@ -41,8 +44,8 @@
 
 (defn combinations
   "Gets conditions and combinations of word-position.
-                        Validate every combination with all conditions.
-                        Returns sequence of booleans."
+   Validate every combination with all conditions.
+   Returns sequence of booleans."
   [conditions combinations]
   (->> combinations
        (map #(single-combination conditions %))

@@ -6,6 +6,7 @@
 
 
 (defn break-string-on-words
+  "Gets clean alphanumeric string of words and sequence of strings split by spaces."
   [text]
   (->> (str/split text #"\s+")
        (remove str/blank?)))
@@ -14,7 +15,7 @@
 (defn seq-of-all-words
   "Gets plain text and cleaning text from non-alphanumeric characters,
   except spaces and hyphen, if it's appears inside a word.
-  Return clean text in one string.
+  Return sequence of strings of all words from text.
   TODO: Should also except some other non-alphanumeric characters which could be part of a word."
   [text]
   (-> text
@@ -25,6 +26,7 @@
 
 
 (defn run-text
+  "Gets map {:query query :text text} and returns result map."
   [{:keys [query text] :as _opts}]
   (let [words (seq-of-all-words text)]
     (cond
@@ -34,6 +36,7 @@
 
 
 (defn run-file
+  "Gets map {:file filename} and printing a result of matching given query on text from file."
   [{:keys [file] :as _opts}]
   (let [query data/query]
     (println
@@ -41,6 +44,8 @@
 
 
 (defn -main
+  "Contextual search main function.
+  Gets filename as first argument. File should contain text."
   [& args]
   (let [filename (first args)]
     (try
