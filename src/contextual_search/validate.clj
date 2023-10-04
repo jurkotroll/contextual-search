@@ -20,7 +20,8 @@
     (<= 1 distance max-distance)))
 
 
-(defn pair-of-word-positions
+(defn clause
+  "Validate clause of condition on one combination of word-positions."
   [{:keys [word-1 word-2] :as clause} combination]
   (->> combination
        (filter #(#{word-1 word-2} (get-word %)))
@@ -33,7 +34,7 @@
     [[false]]
     (map (fn [condition]
            (map (fn [clause]
-                  (pair-of-word-positions clause combination))
+                  (clause clause combination))
                 condition))
          conditions)))
 

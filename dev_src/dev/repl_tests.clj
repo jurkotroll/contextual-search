@@ -108,7 +108,7 @@
 
   (def condition ["material" "silicon" 3])
   (def comb '(["car" 30] ["material" 39] ["silicon" 37]))
-  (validate/pair-of-word-positions condition comb)
+  (validate/clause condition comb)
   (tap> (validate/single-combination conditions comb))
 
   (some? (first [1]))
