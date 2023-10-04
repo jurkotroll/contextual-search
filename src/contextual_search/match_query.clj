@@ -1,6 +1,6 @@
 (ns contextual-search.match-query
   (:require [contextual-search.validate :as validate]
-            [contextual-search.word-positions :as word-positions]))
+            [contextual-search.word-position :as word-position]))
 
 
 (defn mani-words-query?
@@ -9,8 +9,8 @@
     (first
       (validate/combinations
         conditions
-        (word-positions/word-position-combinations
-          (word-positions/find-word-positions {:words words :words-to-find words-to-find}))))))
+        (word-position/combinations
+          (word-position/find-positions {:words words :words-to-find words-to-find}))))))
 
 
 (defn single-word-query?

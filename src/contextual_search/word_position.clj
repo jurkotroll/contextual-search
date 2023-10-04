@@ -1,9 +1,9 @@
-(ns contextual-search.word-positions
+(ns contextual-search.word-position
   (:require
     [clojure.math.combinatorics :as combo]))
 
 
-(defn find-word-positions
+(defn find-positions
   "Gets sequence of all words and return sequence of word-positions
   of every appearance of words-to-find."
   [{:keys [words words-to-find]}]
@@ -14,7 +14,7 @@
                   words)))
 
 
-(defn word-position-combinations
+(defn combinations
   "Gets vector of words, which needs to be found, and vector of all words.
   Finds position of every appearance of word-to-find and combines a tuples
   of word and position - word as string and position as integer '[word position]'.
