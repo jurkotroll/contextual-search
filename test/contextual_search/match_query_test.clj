@@ -15,6 +15,13 @@
 (def query-2 {:words-to-find ["panel" "solar"]
               :conditions    [[{:word-1 "panel" :word-2 "solar" :max-distance 1}]]})
 
+(def words-test-4 ["panel" "solar" "car" "roof"])
+
+(def query-4 {:words-to-find ["panel" "solar" "roof"]
+              :conditions    [[{:word-1 "panel" :word-2 "solar" :max-distance 1}]
+                              [{:word-1 "panel" :word-2 "roof" :max-distance 1}
+                               {:word-1 "panel" :word-2 "roof" :max-distance 1}]]})
+
 
 (deftest single-word-query?-test
   (is (true? (match/single-word-query? query-1 words-test-1)))
@@ -25,7 +32,8 @@
 (deftest mani-words-query?-test
   (is (true? (match/mani-words-query? query-2 words-test-1)))
   (is (false? (match/mani-words-query? query-2 words-test-2)))
-  (is (false? (match/mani-words-query? query-2 words-test-3))))
+  (is (false? (match/mani-words-query? query-2 words-test-3)))
+  (is (false? (match/mani-words-query? query-4 words-test-4))))
 
 
 (deftest match-query?-test
