@@ -3,8 +3,8 @@
 
 (defn all-valid?
   "Gets a sequence of validated conditions, and return true if every condition contains at least one true."
-  [coll]
-  (->> coll
+  [validated-conditions]
+  (->> validated-conditions
        (map #(some identity %))
        (every? identity)))
 

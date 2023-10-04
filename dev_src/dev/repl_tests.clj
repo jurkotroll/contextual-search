@@ -211,6 +211,9 @@
                                 [{:word-1 "panel" :word-2 "roof" :max-distance 2}
                                  {:word-1 "panel" :word-2 "roof" :max-distance 2}]]})
 
+  (def query-4 {:words-to-find ["panel" "solar" "roof"]
+                :conditions    []})
+
   (match/single-word-query? query-1 [])
 
 
@@ -224,9 +227,40 @@
     so that a required solar panel is obtained, and the finished product of the carbon fiber solar panel car roof
     is obtained")
 
+  (match/mani-words-query? query-4 test-text-all)
+
   (core/seq-of-all-words nil)
 
   (core/run-text {:text test-text-all})
 
+
+  (def word-position-combinations-test-1 [[["car" 8] ["material" 17] ["silicon" 37]]
+                                          [["car" 30] ["material" 17] ["silicon" 37]]
+                                          [["car" 30] ["material" 39] ["silicon" 37]]
+                                          [["car" 129] ["material" 39] ["silicon" 84]]])
+
+
+  (def conditions-test-1 [[{:word-1 "material" :word-2 "silicon" :max-distance 3}]
+                          [{:word-1 "car" :word-2 "material" :max-distance 9}
+                           {:word-1 "car" :word-2 "silicon" :max-distance 9}]])
+
+  (def conditions-test-2 [[{:word-1 "material" :word-2 "silicon" :max-distance 20}]])
+
+
+  (tap> (validate/combinations [] word-position-combinations-test-1))
+
+  (tap> (validate/single-combination conditions-test-1 [["car" 30] ["material" 39] ["silicon" 37]]))
+
+  (validate/single-combination conditions-test-2 [["car" 30] ["material" 39] ["silicon" 37]])
+
+  (validate/single-combination conditions-test-1 [["car" 30] ["material" 17] ["silicon" 37]])
+
+  (validate/single-combination conditions-test-2 [["car" 30] ["material" 17] ["silicon" 37]])
+
+  (validate/all-valid? [[true] [true true]])
+
+  (validate/all-valid? [[true] [true false]])
+  (validate/all-valid? [[false] [true true]])
+  (validate/all-valid? [[true] [false false]])
 
   {})
