@@ -1,0 +1,3 @@
+TODO: Validation tests.
+TODO: Word positions tests.
+TODO: Parsing string with query.
