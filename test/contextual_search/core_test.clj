@@ -7,8 +7,8 @@
   "  The invention discloses a    - fiber solar panel some-word car roof. Carbon fiber is taken as a raw material")
 
 (def text-answer-1
-  '("the" "invention" "discloses" "a" "fiber" "solar" "panel" "some-word" "car"
-     "roof" "carbon" "fiber" "is" "taken" "as" "a" "raw" "material"))
+  ["the" "invention" "discloses" "a" "fiber" "solar" "panel" "some-word" "car"
+   "roof" "carbon" "fiber" "is" "taken" "as" "a" "raw" "material"])
 
 (deftest seq-of-all-words-test
   (is (= text-answer-1 (core/seq-of-all-words text-test-1)))
@@ -18,7 +18,7 @@
 
 (def string-to-break-test "invention discloses a carbon fiber solar panel car roof")
 
-(def string-to-break-answer '("invention" "discloses" "a" "carbon" "fiber" "solar" "panel" "car" "roof"))
+(def string-to-break-answer ["invention" "discloses" "a" "carbon" "fiber" "solar" "panel" "car" "roof"])
 
 (deftest break-string-on-words
   (is (= string-to-break-answer (core/break-string-on-words string-to-break-test)))
