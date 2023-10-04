@@ -6,7 +6,8 @@
             [clojure.java.io :as io]
             [malli.core :as malli]
             [malli.error :as error]
-            [contextual-search.match-query :as match]))
+            [contextual-search.match-query :as match]
+            [contextual-search.word-position :as word-position]))
 
 
 
@@ -198,7 +199,7 @@
   (core/break-string-on-words "")
 
 
-  (def words-test-1 '("invention" "discloses" "a" "carbon" "fiber" "solar" "panel" "car" "roof"))
+  (def words-test-1 ["invention" "discloses" "a" "carbon" "fiber" "solar" "panel" "car" "roof"])
 
   (def query-1 {:words-to-find ["solar"]
                 :conditions    []})
@@ -227,9 +228,14 @@
     so that a required solar panel is obtained, and the finished product of the carbon fiber solar panel car roof
     is obtained")
 
+  (tap> (core/break-string-on-words test-text-all))
+
   (match/mani-words-query? query-4 test-text-all)
 
-  (core/seq-of-all-words nil)
+
+
+  (tap> (word-position/find-positions {:words         (core/break-string-on-words test-text-all)
+                                       :words-to-find ["panel" "solar" "roof"]}))
 
   (core/run-text {:text test-text-all})
 
@@ -262,5 +268,25 @@
   (validate/all-valid? [[true] [true false]])
   (validate/all-valid? [[false] [true true]])
   (validate/all-valid? [[true] [false false]])
+
+  (some #{9} [9 5])
+
+  (def words-test-2
+    ["the" "invention" "discloses" "a" "fiber" "solar" "panel" "some-word" "car"
+     "roof" "carbon" "fiber" "is" "taken" "as" "a" "raw" "material"])
+
+  (def words-to-find ["panel" "solar" "roof"])
+
+  (word-position/find-positions {:words words-test-2 :words-to-find ["c" "b" "d"]})
+
+  (def words-test-answer-1
+    [["solar" 6] ["panel" 7] ["roof" 31] ["solar" 115] ["panel" 116] ["solar" 127] ["panel" 128] ["roof" 130]])
+
+  (def words-test-answer-2
+    [["solar" 6] ["panel" 7] ["roof" 31] ["solar" 115]])
+
+
+
+  (word-position/combinations words-test-answer-2)
 
   {})
