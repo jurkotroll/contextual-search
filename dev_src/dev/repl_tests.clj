@@ -7,7 +7,10 @@
             [malli.core :as malli]
             [malli.error :as error]
             [contextual-search.match-query :as match]
-            [contextual-search.word-position :as word-position]))
+            [contextual-search.word-position :as word-position]
+            [clojure.edn :as edn]
+            [clojure.walk :as walk]
+            [contextual-search.query-parser :as query-parser]))
 
 
 
@@ -108,7 +111,7 @@
 
   (def condition ["material" "silicon" 3])
   (def comb '(["car" 30] ["material" 39] ["silicon" 37]))
-  (validate/clause condition comb)
+  (validate/valid-clause? condition comb)
   (tap> (validate/single-combination conditions comb))
 
   (some? (first [1]))
@@ -228,6 +231,35 @@
     so that a required solar panel is obtained, and the finished product of the carbon fiber solar panel car roof
     is obtained")
 
+  (def query-7 {:words-to-find ["film" "silicon" "material"]
+                :conditions    [[{:word-1 "material" :word-2 "silicon" :max-distance 2}]
+                                [{:word-1 "film" :word-2 "material" :max-distance 2}
+                                 {:word-1 "film" :word-2 "silicon" :max-distance 2}]]})
+
+  (def words-test-4 ["panel" "solar" "car" "roof"])
+
+  (def query-4 {:words-to-find ["panel" "solar" "roof"]
+                :conditions    [[{:word-1 "panel" :word-2 "solar" :max-distance 1}]
+                                [{:word-1 "panel" :word-2 "roof" :max-distance 1}
+                                 {:word-1 "panel" :word-2 "roof" :max-distance 1}]]})
+
+  (match/mani-words-query? query-4 words-test-4)
+
+  (let [w-p (word-position/find-positions {:words words-test-4 :words-to-find ["panel" "solar" "roof"]})
+        comb (word-position/combinations w-p)
+        cond [[{:word-1 "panel" :word-2 "solar" :max-distance 1}]
+              [{:word-1 "panel" :word-2 "roof" :max-distance 1}
+               {:word-1 "panel" :word-2 "roof" :max-distance 1}]]
+        val (validate/single-combination cond (first comb))]
+
+    (tap> [:comb-first (first comb)])
+    (tap> [:val val])
+    #_(tap> [:comb comb])
+    #_(tap> [:w-pos w-p]))
+
+
+  (core/run-text {:text test-text-all :query query-4})
+
   (tap> (core/break-string-on-words test-text-all))
 
   (match/mani-words-query? query-4 test-text-all)
@@ -289,4 +321,277 @@
 
   (word-position/combinations words-test-answer-2)
 
-  {})
+
+  (def query "car W3 (silicon W9 material)")
+
+
+  (def split-query
+    (-> query
+        (str/replace "(" " ( ")
+        (str/replace ")" " ) ")
+        (str/split #"\s+")))
+  ;; => ["car" "W9" "(" "silicon" "W3" "material" ")"]
+
+  (def edn-query
+    (edn/read-string (str "[" query "]")))
+
+  (tap> edn-query)
+
+  (let [query "car W3 (silicon W9 material)"
+        split-query (-> query
+                        (str/replace "(" " ( ")
+                        (str/replace ")" " ) ")
+                        (str/split #"\s+"))
+        edn-query (edn/read-string (str "[" query "]"))]
+    (tap> split-query)
+    (tap> edn-query)
+    (walk/postwalk-demo edn-query)
+    (println "========================")
+    (walk/prewalk-demo edn-query)
+    edn-query)
+
+  (let [query "car W3 (silicon W9 material)"
+        split-query (-> query
+                        (str/replace "(" " ( ")
+                        (str/replace ")" " ) ")
+                        (str/split #"\s+"))
+        edn-query (edn/read-string (str "[" query "]"))]
+    (tap> split-query)
+    (tap> edn-query)
+    (walk/postwalk-demo edn-query)
+    (println "========================")
+    (walk/prewalk-demo edn-query)
+    edn-query)
+
+  (def query {:words-to-find ["car" "silicon" "material"]
+              :conditions    [[{:word-1 "material" :word-2 "silicon" :max-distance 3}]
+                              [{:word-1 "car" :word-2 "material" :max-distance 9}
+                               {:word-1 "car" :word-2 "silicon" :max-distance 9}]]})
+
+  [[["material" "silicon" 3]]
+   [["car" "material" 9]
+    ["car" "silicon" 9]]]
+
+  ;;"car W3 (silicon W9 material)" => [clause-1 clause-2]
+  ;;silicon W9 material => [clause-1]
+
+  ;; [a WX [b WY c]] =>
+  ;; [[(a WX [b c])] [(b WY c)]]
+  ;;
+  ;; [[(a WX b) (a WX c)] [(b WX c)]
+  (let [words-to-find (atom [])
+        conditions (atom [])]
+    (walk/prewalk
+      (fn [x]
+        (println x)
+        (cond
+          (vector? x) (swap! conditions conj
+                             (let [[element-1 max-distance element-2] x
+                                   element-2 (if (vector? element-2)
+                                               [(first element-2) (last element-2)]
+                                               element-2)]
+                               [{:element-1    element-1
+                                 :max-distance max-distance
+                                 :element-2    element-2}]))
+          (string? x) (swap! words-to-find conj x)
+          :else x) x)
+
+      ["car" 3 ["silicon" 9 "material"]])
+    (tap> @words-to-find)
+    (tap> @conditions))
+
+  (let [words-to-find (atom [])
+        conditions (atom [])]
+    (walk/prewalk
+      (fn [x]
+        (println x)
+        (cond
+          (vector? x) (swap! conditions conj
+                             (let [[element-1 max-distance element-2] x
+                                   element-2 (if (vector? element-2)
+                                               [(first element-2) (last element-2)]
+                                               element-2)
+                                   element-1 (if (vector? element-1)
+                                               [(first element-1) (last element-1)]
+                                               element-1)]
+                               [{:element-1    element-1
+                                 :max-distance max-distance
+                                 :element-2    element-2}]))
+          (string? x) (swap! words-to-find conj x)
+          :else x) x)
+
+      [["silicon" 9 "material"] 3 ["car" 5 "roof"]])
+    (tap> @words-to-find)
+    (tap> @conditions))
+
+  (let [words-to-find (atom [])
+        conditions (atom [])]
+    (walk/prewalk
+      (fn [x]
+        (println x)
+        (cond
+          (vector? x) (swap! conditions conj
+                             (let [[element-1 max-distance element-2] x
+                                   element-2 (if (vector? element-2)
+                                               [(first element-2) (last element-2)]
+                                               element-2)
+                                   element-1 (if (vector? element-1)
+                                               [(first element-1) (last element-1)]
+                                               element-1)]
+                               [{:element-1    element-1
+                                 :max-distance max-distance
+                                 :element-2    element-2}]))
+          (string? x) (swap! words-to-find conj x)
+          :else x)
+        x)
+
+      ["silicon" 9 ["material" 3 ["car" 5 "roof"]]])
+    (tap> @words-to-find)
+    (tap> @conditions))
+
+  (tap> ["silicon" 9 ["material" 3 ["car" 5 "roof"]]])
+
+  (last ["car" "W3" ["silicon" "W9" "material"]])
+
+  (seq? ["car" "W3" ["silicon" "W9" "material"]])
+
+  [{:element-1    "silicon",
+    :max-distance 9,
+    :element-2    "material"}
+   {}]
+
+  (let [words-to-find (atom [])
+        conditions (atom [])]
+    (walk/prewalk
+      (fn [x]
+        (println x)
+        (cond
+          (vector? x) (swap! conditions conj
+                             (let [[element-1 max-distance element-2] x
+                                   words-2 (filter string? (flatten [element-2]))
+                                   words-1 (filter string? (flatten [element-1]))]
+
+                               (vec (mapcat (fn [word-1]
+                                              (map (fn [word-2]
+                                                     {:element-1    word-1
+                                                      :element-2    word-2
+                                                      :max-distance max-distance})
+                                                   words-2))
+                                            words-1))))
+
+          (string? x) (swap! words-to-find conj x)
+          :else x)
+        x)
+
+      ["silicon" 9 ["material" 3 ["car" 5 "roof"]]])
+    (tap> @words-to-find)
+    (tap> @conditions))
+
+  ["silicon" 9 [["car" 5 "roof"] 3 "material"]]
+
+  (tap> (vec
+          '({:element-1 "silicon", :element-2 "car", :max-distance 3}
+            {:element-1 "silicon", :element-2 "roof", :max-distance 3}
+            {:element-1 "material", :element-2 "car", :max-distance 3}
+            {:element-1 "material", :element-2 "roof", :max-distance 3})))
+
+  (tap> (flatten ["silicon" 9 ["material" 3 ["car" 5 "roof"]]]))
+  (tap> (flatten [["silicon" 9 ["material" 3 ["car" 5 "roof"]]]]))
+
+  (tap> (let [[element-1 max-distance element-2] [["silicon" 9 "material"] 3 ["car" 5 "roof"]]
+              words-2 (filter string? (flatten [element-2]))
+              words-1 (filter string? (flatten [element-1]))]
+
+          (vec (mapcat (fn [word-1]
+                         (map (fn [word-2]
+                                {:element-1    word-1
+                                 :element-2    word-2
+                                 :max-distance max-distance})
+                              words-2))
+                       words-1))))
+
+  (let [words-to-find (atom [])
+        conditions (atom [])]
+    (walk/prewalk
+      (fn [x]
+        (println x)
+        (cond
+          (vector? x) (swap! conditions conj
+                             (let [[element-1 max-distance element-2] x
+                                   words-2 (filter string? (flatten [element-2]))
+                                   words-1 (filter string? (flatten [element-1]))]
+
+                               (vec (mapcat (fn [word-1]
+                                              (map (fn [word-2]
+                                                     {:element-1    word-1
+                                                      :element-2    word-2
+                                                      :max-distance max-distance})
+                                                   words-2))
+                                            words-1))))
+
+          (string? x) (swap! words-to-find conj x)
+          :else x)
+        x)
+
+      [["silicon" 9 "material"] 3 ["car" 5 "roof"]])
+    (tap> @words-to-find)
+    (tap> @conditions)
+    conditions)
+
+  (tap> (destr/vec-to-query [["silicon" 9 "material"] 3 ["car" 5 "roof"]]))
+
+  (def query "car W3 (silicon W9 material)")
+
+  (tap> (edn/read-string (str "[" query "]")))
+
+  (re-find #"W(\d+)" "car")
+
+  (last (re-find #"W(\d+)" "car"))
+
+
+  (let [x-string "W5"
+        distance (if-some [distance (last (re-find #"W(\d+)" x-string))]
+                   (parse-long distance)
+                   x-string)]
+    (if distance
+      distance
+      x-string))
+
+  (let [x-string "W5"]
+    (if-some [distance (last (re-find #"W(\d+)" x-string))]
+      (parse-long distance)
+      x-string))
+
+
+  (let [x-string "W5"
+        distance (when-some [distance (last (re-find #"W(\d+)" x-string))]
+                   (parse-long distance))]
+    (if distance
+      distance
+      x-string))
+
+  (coll? (list "a" "b"))
+
+  (walk/postwalk
+    (fn [x]
+      (cond
+        (coll? x) (vec x)
+        (symbol? x) (let [x-string (str x)]
+                      (if-some [distance (last (re-find #"W(\d+)" x-string))]
+                        (parse-long distance)
+                        x-string))
+
+        :else (throw (ex-info "Invalid query." {:query "query"
+                                                :form  x}))))
+    (edn/read-string (str "[" "car W3 (silicon W9 material)" "]")))
+
+
+  (def edn-query
+    (edn/read-string (str "[" "car W3 (silicon W9 material)" "]")))
+
+  (tap> [(query-parser/parse "car W3 (silicon W9 material)")
+         (query-parser/parse "car")
+         (query-parser/parse "(car W3 silicon) W4 (material W9 roof)")
+         (query-parser/parse "silicon W9 (material W3 (car W5 roof))")])
+
+  #_{})
