@@ -22,7 +22,7 @@
     (<= 1 distance max-distance)))
 
 
-(defn clause
+(defn valid-clause?
   "Validate clause of condition on one combination of word-positions."
   [{:keys [word-1 word-2] :as clause} combination]
   (->> combination
@@ -37,7 +37,7 @@
     [[false]]
     (map (fn [condition]
            (map (fn [clause]
-                  (clause clause combination))
+                  (valid-clause? clause combination))
                 condition))
          conditions)))
 

@@ -1,7 +1,8 @@
 (ns contextual-search.core
   (:require [contextual-search.match-query :as match]
             [clojure.string :as str]
-            [contextual-search.hard-coded-data :as data])
+            [contextual-search.hard-coded-data :as data]
+            [contextual-search.query-parser :as query-parser])
   (:import (java.io FileNotFoundException)))
 
 
@@ -37,7 +38,7 @@
 
 (defn run-file
   "Gets map {:file filename} and printing a result of matching given query on text from file."
-  [{:keys [file] :as _opts}]
+  [{:keys [file query] :as _opts}]
   (let [query data/query]
     (println
       (run-text {:text (slurp file) :query query}))))
@@ -47,9 +48,11 @@
   "Contextual search main function.
   Gets filename as first argument. File should contain text."
   [& args]
-  (let [filename (first args)]
+  (let [filename (first args)
+        query (or (query-parser/parse (second args))
+                  data/query)]
     (try
-      (run-file {:file filename})
+      (run-file {:file filename :query query})
       (catch FileNotFoundException _e
         (println "File " filename " not found")
         (System/exit 1))
